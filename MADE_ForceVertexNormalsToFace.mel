@@ -1,0 +1,52 @@
+/**
+ * This script sets the vertex normals of the selected faces to
+ * the normals of their corresponding face and locks the normals.
+ *
+ * @author Manfred Nerurkar
+ * @date 2016
+ * @copyright MADE GmbH
+ */
+
+ global proc MADE_forceVertexNormalsToFace()
+ {
+	// save intitial selection
+	string $select[] = `ls -sl`;
+
+	// get array of all selected faces
+	string $selected_faces[] = `filterExpand -sm 34`;
+
+	// clear selections
+	select -cl;
+
+	// iterate through faces
+	for ($face in $selected_faces) {
+		// select face, and replace current selection
+		select -r $face;
+
+		// get poly info for selection
+		// Result: FACE_NORMAL     16: 1.000000 0.000000 0.000000
+		string $normals[] = `polyInfo -faceNormals`;
+
+		// split into array
+		string $buffer[];
+		tokenize $normals[0] $buffer;
+
+		// convert to float normal
+		float $normal[3];
+		$normal[0] = $buffer[2];
+		$normal[1] = $buffer[3];
+		$normal[2] = $buffer[4];
+
+		// convert face selection to vertices
+		PolySelectConvert 3;
+
+		// set vertex normal
+		polyNormalPerVertex -xyz $normal[0] $normal[1] $normal[2];
+	}
+
+	// restore initial selection
+	select -r $select;
+
+	// switch back to faces (disable all components, enable faces)
+	selectType -alc 0 -fc 1;
+}
